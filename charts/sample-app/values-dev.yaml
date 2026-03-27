@@ -1,5 +1,5 @@
 image:
-  repository: 
+  repository: 405184066547.dkr.ecr.ca-central-1.amazonaws.com/sample-app
   tag: "dev-94ed8e4"
 
 ingress:
