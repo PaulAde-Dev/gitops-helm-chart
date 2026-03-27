@@ -1,0 +1,64 @@
+{{- if .Values.keda.enabled }}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "sample-app.fullname" . }}
+  labels:
+    {{- include "sample-app.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    name: {{ include "sample-app.fullname" . }}
+  pollingInterval: {{ .Values.keda.pollingInterval | default 30 }}
+  cooldownPeriod: {{ .Values.keda.cooldownPeriod | default 300 }}
+  minReplicaCount: {{ .Values.keda.minReplicaCount | default 1 }}
+  maxReplicaCount: {{ .Values.keda.maxReplicaCount | default 10 }}
+  {{- if .Values.keda.fallback }}
+  fallback:
+    failureThreshold: {{ .Values.keda.fallback.failureThreshold | default 3 }}
+    replicas: {{ .Values.keda.fallback.replicas | default 2 }}
+  {{- end }}
+  triggers:
+    {{- if .Values.keda.triggers.cpu }}
+    - type: cpu
+      metricType: Utilization
+      metadata:
+        value: "{{ .Values.keda.triggers.cpu.threshold | default 70 }}"
+    {{- end }}
+    {{- if .Values.keda.triggers.memory }}
+    - type: memory
+      metricType: Utilization
+      metadata:
+        value: "{{ .Values.keda.triggers.memory.threshold | default 80 }}"
+    {{- end }}
+    {{- if .Values.keda.triggers.prometheus }}
+    - type: prometheus
+      metadata:
+        serverAddress: {{ .Values.keda.triggers.prometheus.serverAddress | quote }}
+        metricName: {{ .Values.keda.triggers.prometheus.metricName | quote }}
+        query: {{ .Values.keda.triggers.prometheus.query | quote }}
+        threshold: "{{ .Values.keda.triggers.prometheus.threshold }}"
+    {{- end }}
+    {{- if .Values.keda.triggers.azure }}
+    {{- if .Values.keda.triggers.azure.serviceBus }}
+    - type: azure-servicebus
+      metadata:
+        queueName: {{ .Values.keda.triggers.azure.serviceBus.queueName | quote }}
+        namespace: {{ .Values.keda.triggers.azure.serviceBus.namespace | quote }}
+        messageCount: "{{ .Values.keda.triggers.azure.serviceBus.messageCount | default 5 }}"
+      authenticationRef:
+        name: {{ .Values.keda.triggers.azure.serviceBus.authRef | default "azure-servicebus-auth" }}
+    {{- end }}
+    {{- if .Values.keda.triggers.azure.storageQueue }}
+    - type: azure-queue
+      metadata:
+        queueName: {{ .Values.keda.triggers.azure.storageQueue.queueName | quote }}
+        accountName: {{ .Values.keda.triggers.azure.storageQueue.accountName | quote }}
+        queueLength: "{{ .Values.keda.triggers.azure.storageQueue.queueLength | default 5 }}"
+      authenticationRef:
+        name: {{ .Values.keda.triggers.azure.storageQueue.authRef | default "azure-storage-auth" }}
+    {{- end }}
+    {{- end }}
+    {{- with .Values.keda.triggers.custom }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}

@@ -1,0 +1,26 @@
+replicaCount: 2
+
+image:
+  repository: 405184066547.dkr.ecr.ca-central-1.amazonaws.com/sample-app
+  tag: "staging-latest"
+
+ingress:
+  enabled: true
+  className: "nginx"
+  hosts:
+    - host: staging.sample-app.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+keda:
+  enabled: true
+  minReplicaCount: 2
+  maxReplicaCount: 8
+  triggers:
+    cpu:
+      threshold: 75

@@ -1,0 +1,20 @@
+image:
+  repository: 405184066547.dkr.ecr.ca-central-1.amazonaws.com/sample-app
+  tag: "dev-local"
+
+ingress:
+  enabled: true
+  className: "nginx"
+  hosts:
+    - host: dev.sample-app.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+keda:
+  enabled: true
+  minReplicaCount: 1
+  maxReplicaCount: 5
+  triggers:
+    cpu:
+      threshold: 70
